@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Configuración local
+.env
+.env.local
+.env.*.local
+
+# Datos generados (artefactos de extract.py)
+data/raw/*.parquet
+data/processed/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
