@@ -4,3 +4,4 @@ python-dotenv==1.0.1
 pyarrow==18.1.0
 google-cloud-storage==2.18.2
 ucimlrepo==0.0.7
+google-cloud-bigquery==3.25.0

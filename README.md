@@ -57,6 +57,19 @@ y clima, desarrollado como parte del Módulo 7 del MCI 506.
 
 `hour.csv` añade las mismas columnas más `hr` (hora 0–23).
 
+### Nota sobre la variable season
+
+  Durante el análisis exploratorio se verificó que la codificación de la variable `season` no coincide exactamente con los cambios astronómicos de estación observados en las fechas del dataset. Por ejemplo, registros correspondientes al 21 de diciembre aparecen clasificados como `season = 1`, cuando en Washington D.C. dicha fecha corresponde al inicio del invierno.
+
+  Sin embargo, el archivo README original del Bike Sharing Dataset define explícitamente la variable de la siguiente manera:
+
+  - 1 = Spring
+  - 2 = Summer
+  - 3 = Fall
+  - 4 = Winter
+
+  Por consistencia con la documentación oficial y para garantizar la reproducibilidad de los análisis, se mantuvo la codificación original proporcionada por los autores del dataset. Esta decisión fue documentada debido a que la clasificación estacional parece haber sido preprocesada previamente y no necesariamente sigue los límites astronómicos exactos.
+
 ## Configuración
 
 Copia `.env.example` a `.env` y rellena los valores. **No commitees `.env`.**
