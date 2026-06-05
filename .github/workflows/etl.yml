@@ -1,0 +1,33 @@
+name: ETL Pipeline — Bike Sharing
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install requests pandas pyarrow python-dotenv google-cloud-storage
+
+      - name: Configurar credenciales GCP
+        run: |
+          mkdir -p credentials
+          echo '${{ secrets.GCP_CREDENTIALS }}' > credentials/service-account.json
+
+      - name: Ejecutar extract.py
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: credentials/service-account.json
+          GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+        run: python scripts/extract.py
