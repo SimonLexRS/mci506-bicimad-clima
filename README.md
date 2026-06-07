@@ -8,11 +8,17 @@ y clima, desarrollado como parte del Módulo 7 del MCI 506.
 ```
 .
 ├── data/
-│   └── raw/         # Datos crudos descargados por extract.py
+│   ├── raw/         # Datos crudos descargados por extract.py
+│   └── processed/   # Datos transformados
 ├── scripts/
-│   ├── extract.py   # Descarga, validación y carga opcional a GCS
-│   ├── transform.py # Limpieza y unión de datos (pendiente)
-│   └── load.py      # Carga a BigQuery / GCS (pendiente)
+│   ├── extract.py   # Descarga, validación y carga a GCS
+│   ├── transform.py # Limpieza y normalización de datos
+│   └── load.py      # Carga a BigQuery (Silver / Gold)
+├── sql/
+│   ├── bronze.sql           # External tables en BigQuery
+│   └── silver_transform.sql # Transformaciones y deduplicación Silver
+├── .github/workflows/
+│   └── etl.yml      # Pipeline de GitHub Actions
 ├── requirements.txt
 ├── .env.example
 └── README.md
@@ -87,28 +93,105 @@ Salida esperada:
 - `data/raw/day.csv` y `data/raw/hour.csv` (o `.parquet`)
 - Subida opcional a `gs://<bucket>/raw/...`
 
-### Transformación (pendiente)
+### Transformación
 
 ```bash
 python scripts/transform.py
 ```
 
-### Carga a BigQuery (pendiente)
+Salida esperada: `data/processed/day.csv` y `data/processed/hour.csv`
+
+### Carga a BigQuery
 
 ```bash
-python scripts/load.py
+python scripts/load.py --capa silver
+python scripts/load.py --capa gold
+python scripts/load.py --capa ambas
 ```
+
+## Automatización
+
+El pipeline se ejecuta automáticamente mediante **GitHub Actions** (`.github/workflows/etl.yml`).
+
+| Trigger | Descripción |
+| --- | --- |
+| Push a `main` | Se ejecuta en cada merge al branch principal |
+| `workflow_dispatch` | Ejecución manual desde la pestaña Actions en GitHub |
+
+**Pasos del workflow:**
+
+1. Clonar el repositorio
+2. Instalar Python 3.11 y dependencias (`requirements.txt`)
+3. Configurar credenciales de GCP desde los Secrets del repo
+4. Ejecutar `python scripts/extract.py`
+
+**Secrets requeridos en el repositorio de GitHub:**
+
+| Secret | Descripción |
+| --- | --- |
+| `GCP_CREDENTIALS` | JSON completo de la service account de GCP |
+| `GCS_BUCKET_NAME` | Nombre del bucket destino en GCS |
+
+## BigQuery
+
+El data warehouse usa tres capas en el dataset `bike_sharing_dw` del proyecto `mci506-bicimad-clima-v2`.
+
+| Capa | Tabla | Archivo SQL | Estado |
+| --- | --- | --- | --- |
+| Bronze | `bronze_day`, `bronze_hour` | `sql/bronze.sql` | ✅ |
+| Silver | `silver_day`, `silver_hour` | `sql/silver_transform.sql` | ✅ |
+| Gold | (pendiente) | `sql/gold_aggregations.sql` | ⏳ |
+
+**Bronze** — External tables apuntando directamente a los archivos en GCS (`gs://bike_sharing_v2/raw/`).
+
+**Silver** — Tablas nativas con limpieza de tipos (`SAFE_CAST`), renombrado de columnas y deduplicación con `ROW_NUMBER() OVER (PARTITION BY ride_id)`.
+
+**Gold** — Pendiente: agregaciones por día, mes, día de semana y relación clima-viajes.
+
+## Dashboard
+
+El dashboard está construido en **Looker Studio** conectado a la tabla Gold de BigQuery.
+Muestra el comportamiento de la demanda de bicicletas según clima, temporada y día de la semana.
+
+**Responsable:** Jennifer Suarez
+
+### Visualizaciones
+
+1. Serie temporal de viajes por fecha
+2. Viajes por día de la semana (gráfico de barras)
+3. Relación temperatura / condición climática vs. alquileres
+
+### Acceso
+
+> **Link al dashboard:** _[pendiente — Jennifer inserta aquí el link de Looker Studio]_
+
+### Capturas de pantalla
+
+<!-- Aquí van las capturas de pantalla del dashboard -->
+
+> **Captura de pantalla del dashboard — insertar aquí**
+
+---
 
 ## Estado del proyecto
 
 - [x] Estructura inicial del repositorio
-- [x] `extract.py` funcional con descarga, validación y carga opcional a GCS
+- [x] `extract.py` funcional con descarga, validación y carga a GCS
 - [x] `requirements.txt` y `.gitignore`
-- [ ] `transform.py`
-- [ ] `load.py` (BigQuery / GCS Silver-Gold)
-- [ ] Dashboard y documentación final
+- [x] `transform.py` (limpieza y normalización)
+- [x] `load.py` (carga a BigQuery — Silver / Gold)
+- [x] SQL Bronze (external tables en BigQuery)
+- [x] SQL Silver (limpieza y deduplicación)
+- [x] GitHub Actions (`etl.yml`) ejecutando el pipeline
+- [ ] SQL Gold (agregaciones y métricas)
+- [ ] Dashboard Looker Studio (3+ visualizaciones)
+- [ ] Documentación final del README
 
 ## Equipo
 
-- Daniela Caro — Data Engineer Python
-- Simon Alex Rodriguez — Revisión y orquestación
+| Nombre | Rol |
+| --- | --- |
+| Daniela Caro | Data Engineer Python — `extract.py`, `transform.py` |
+| Daniel Ribera | BigQuery / SQL — Bronze, Silver, Gold |
+| Jennifer Suarez | Dashboard / Documentación — Looker Studio, capturas, README |
+| Simon Alex Rodriguez | Líder / Integrador — repo, revisión, GitHub Actions |
