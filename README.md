@@ -8,11 +8,17 @@ y clima, desarrollado como parte del Módulo 7 del MCI 506.
 ```
 .
 ├── data/
-│   └── raw/         # Datos crudos descargados por extract.py
+│   ├── raw/         # Datos crudos descargados por extract.py
+│   └── processed/   # Datos transformados
 ├── scripts/
-│   ├── extract.py   # Descarga, validación y carga opcional a GCS
-│   ├── transform.py # Limpieza y unión de datos (pendiente)
-│   └── load.py      # Carga a BigQuery / GCS (pendiente)
+│   ├── extract.py   # Descarga, validación y carga a GCS
+│   ├── transform.py # Limpieza y normalización de datos
+│   └── load.py      # Carga a BigQuery (Silver / Gold)
+├── sql/
+│   ├── bronze.sql           # External tables en BigQuery
+│   └── silver_transform.sql # Transformaciones y deduplicación Silver
+├── .github/workflows/
+│   └── etl.yml      # Pipeline de GitHub Actions
 ├── requirements.txt
 ├── .env.example
 └── README.md
@@ -87,28 +93,66 @@ Salida esperada:
 - `data/raw/day.csv` y `data/raw/hour.csv` (o `.parquet`)
 - Subida opcional a `gs://<bucket>/raw/...`
 
-### Transformación (pendiente)
+### Transformación
 
 ```bash
 python scripts/transform.py
 ```
 
-### Carga a BigQuery (pendiente)
+Salida esperada: `data/processed/day.csv` y `data/processed/hour.csv`
+
+### Carga a BigQuery
 
 ```bash
-python scripts/load.py
+python scripts/load.py --capa silver
+python scripts/load.py --capa gold
+python scripts/load.py --capa ambas
 ```
+
+## Dashboard
+
+El dashboard está construido en **Looker Studio** conectado a la tabla Gold de BigQuery.
+Muestra el comportamiento de la demanda de bicicletas según clima, temporada y día de la semana.
+
+**Responsable:** Jennifer Suarez
+
+### Visualizaciones
+
+1. Serie temporal de viajes por fecha
+2. Viajes por día de la semana (gráfico de barras)
+3. Relación temperatura / condición climática vs. alquileres
+
+### Acceso
+
+> **Link al dashboard:** _[pendiente — Jennifer inserta aquí el link de Looker Studio]_
+
+### Capturas de pantalla
+
+<!-- Aquí van las capturas de pantalla del dashboard -->
+
+> **Captura de pantalla del dashboard — insertar aquí**
+
+---
 
 ## Estado del proyecto
 
 - [x] Estructura inicial del repositorio
-- [x] `extract.py` funcional con descarga, validación y carga opcional a GCS
+- [x] `extract.py` funcional con descarga, validación y carga a GCS
 - [x] `requirements.txt` y `.gitignore`
-- [ ] `transform.py`
-- [ ] `load.py` (BigQuery / GCS Silver-Gold)
-- [ ] Dashboard y documentación final
+- [x] `transform.py` (limpieza y normalización)
+- [x] `load.py` (carga a BigQuery — Silver / Gold)
+- [x] SQL Bronze (external tables en BigQuery)
+- [x] SQL Silver (limpieza y deduplicación)
+- [x] GitHub Actions (`etl.yml`) ejecutando el pipeline
+- [ ] SQL Gold (agregaciones y métricas)
+- [ ] Dashboard Looker Studio (3+ visualizaciones)
+- [ ] Documentación final del README
 
 ## Equipo
 
-- Daniela Caro — Data Engineer Python
-- Simon Alex Rodriguez — Revisión y orquestación
+| Nombre | Rol |
+| --- | --- |
+| Daniela Caro | Data Engineer Python — `extract.py`, `transform.py` |
+| Daniel Ribera | BigQuery / SQL — Bronze, Silver, Gold |
+| Jennifer Suarez | Dashboard / Documentación — Looker Studio, capturas, README |
+| Simon Alex Rodriguez | Líder / Integrador — repo, revisión, GitHub Actions |
