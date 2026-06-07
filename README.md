@@ -230,3 +230,63 @@ Muestra el comportamiento de la demanda de bicicletas según temporada, día de 
 | Daniel Ribera | BigQuery / SQL — Bronze, Silver, Gold |
 | Jennifer Suarez | Dashboard / Documentación — Looker Studio, capturas, README |
 | Simon Alex Rodriguez | Líder / Integrador — repo, revisión, GitHub Actions |
+
+## Cómo contribuir
+
+Guía paso a paso para integrantes del equipo:
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/SimonLexRS/mci506-bicimad-clima.git
+cd mci506-bicimad-clima
+```
+
+### 2. Crear una rama
+
+Usa la convención de nombres del proyecto:
+
+```bash
+git checkout -b feature/nombre-descriptivo   # nueva funcionalidad
+git checkout -b fix/nombre-del-bug           # corrección de error
+git checkout -b docs/nombre-del-cambio       # documentación
+```
+
+### 3. Configurar el entorno local
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+pip install -r requirements.txt
+
+cp .env.example .env            # completar GCS_BUCKET_NAME y GOOGLE_APPLICATION_CREDENTIALS
+```
+
+### 4. Verificar que extract.py funciona
+
+```bash
+python scripts/extract.py --skip-gcs
+```
+
+Debe terminar con `Extracción completada exitosamente ✓` y crear los archivos en `data/raw/`.
+
+### 5. Hacer commits con formato convencional
+
+```bash
+git add scripts/extract.py
+git commit -m "feat: descripción breve del cambio"
+```
+
+Prefijos válidos: `feat:`, `fix:`, `docs:`, `build:`, `refactor:`, `test:`
+
+### 6. Abrir un Pull Request
+
+```bash
+git push origin feature/nombre-descriptivo
+```
+
+Luego ir a GitHub → **Pull requests** → **New pull request**, seleccionar la rama y completar la descripción con qué cambió y por qué.
+
+### 7. Esperar revisión
+
+Otro integrante del equipo debe revisar el PR antes del merge a `main`. No hacer merge sin aprobación.

@@ -35,6 +35,19 @@ class ExtractError(RuntimeError):
 
 
 def obtener_dataframes_uci() -> dict[str, pd.DataFrame]:
+    """Descarga el Bike Sharing Dataset desde UCI ML Repository y reconstruye day.csv.
+
+    Usa ucimlrepo para obtener los datos horarios originales (hour.csv) y luego
+    agrega por fecha para reconstruir los datos diarios (day.csv): variables
+    categóricas con 'first', climáticas con media redondeada y conteos con suma.
+
+    Returns:
+        dict con claves "day.csv" y "hour.csv", cada una con su DataFrame.
+
+    Raises:
+        ExtractError: Si la descarga falla o si la reconstrucción del dataset
+            diario produce un error.
+    """
     log.info(f"Obteniendo dataset desde UCI ML Repository (ID {DATASET_ID})...")
     try:
         bike_sharing = fetch_ucirepo(id=DATASET_ID)
@@ -52,6 +65,17 @@ def obtener_dataframes_uci() -> dict[str, pd.DataFrame]:
         grouped = df_hour.groupby('dteday')
         
         def round_half_up(series):
+            """Redondea la media de una serie usando redondeo half-up.
+
+            Evita el redondeo bancario de Python (round()) para variables
+            ordinales como weathersit, donde 0.5 debe subir al entero mayor.
+
+            Args:
+                series: Serie de pandas con valores numéricos.
+
+            Returns:
+                Entero resultado de int(mean + 0.5).
+            """
             return int(series.mean() + 0.5)
 
         agg_dict = {
@@ -88,6 +112,18 @@ def obtener_dataframes_uci() -> dict[str, pd.DataFrame]:
 
 
 def validar_dataset(nombre: str, df: pd.DataFrame) -> None:
+    """Valida un DataFrame contra umbrales mínimos de calidad.
+
+    Verifica que el dataset tenga al menos MIN_FILAS filas y MIN_COLUMNAS columnas.
+    Los valores nulos se reportan como advertencia pero no bloquean el flujo.
+
+    Args:
+        nombre: Nombre identificador del dataset (ej. "day.csv") usado en los logs.
+        df: DataFrame a validar.
+
+    Raises:
+        ExtractError: Si el DataFrame no cumple los umbrales de filas o columnas.
+    """
     log.info(f"Validando {nombre}...")
     errores: list[str] = []
 
@@ -126,6 +162,19 @@ def validar_dataset(nombre: str, df: pd.DataFrame) -> None:
 
 
 def guardar_local(nombre: str, df: pd.DataFrame, formato: str) -> Path:
+    """Guarda un DataFrame en el directorio de datos crudos.
+
+    Crea OUTPUT_DIR si no existe. El nombre del archivo usa el stem de `nombre`
+    con la extensión correspondiente al formato elegido.
+
+    Args:
+        nombre: Nombre base del archivo (ej. "day.csv").
+        df: DataFrame a guardar.
+        formato: "csv" o "parquet".
+
+    Returns:
+        Path del archivo guardado.
+    """
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     stem = Path(nombre).stem
 
@@ -144,6 +193,15 @@ def guardar_local(nombre: str, df: pd.DataFrame, formato: str) -> Path:
 
 
 def upload_to_gcs(ruta_local: Path, bucket_name: str) -> None:
+    """Sube un archivo local a Google Cloud Storage bajo el prefijo raw/.
+
+    Args:
+        ruta_local: Path del archivo local a subir.
+        bucket_name: Nombre del bucket GCS destino.
+
+    Raises:
+        ExtractError: Si google-cloud-storage no está instalado o si la subida falla.
+    """
     try:
         from google.cloud import storage
     except ImportError as e:
@@ -168,6 +226,7 @@ def upload_to_gcs(ruta_local: Path, bucket_name: str) -> None:
 
 
 def _configurar_logging() -> None:
+    """Configura el logger raíz con formato de timestamp y nivel INFO."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
@@ -176,6 +235,18 @@ def _configurar_logging() -> None:
 
 
 def main() -> int:
+    """Punto de entrada del script de extracción.
+
+    Orquesta el flujo completo:
+      1. Parsea argumentos CLI (--formato, --skip-gcs).
+      2. Configura logging y carga variables de entorno desde .env.
+      3. Descarga y valida los datasets desde UCI.
+      4. Guarda los archivos localmente en data/raw/.
+      5. Sube a GCS si GCS_BUCKET_NAME está configurado y --skip-gcs no está activo.
+
+    Returns:
+        0 si la extracción fue exitosa, 1 si ocurrió un ExtractError.
+    """
     parser = argparse.ArgumentParser(
         description=(
             "Extrae el Bike Sharing Dataset (UCI), valida y guarda localmente. "
