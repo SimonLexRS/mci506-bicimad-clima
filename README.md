@@ -153,38 +153,60 @@ El data warehouse usa tres capas en el dataset `bike_sharing_dw` del proyecto `m
 | --- | --- | --- | --- |
 | Bronze | `bronze_day`, `bronze_hour` | `sql/bronze.sql` | ✅ |
 | Silver | `silver_day`, `silver_hour` | `sql/silver_transform.sql` | ✅ |
-| Gold | (pendiente) | `sql/gold_aggregations.sql` | ⏳ |
+| Gold | | `sql/gold_aggregations.sql` | ⏳ |
 
 **Bronze** — External tables apuntando directamente a los archivos en GCS (`gs://bike_sharing_v2/raw/`).
 
 **Silver** — Tablas nativas con limpieza de tipos (`SAFE_CAST`), renombrado de columnas y deduplicación con `ROW_NUMBER() OVER (PARTITION BY ride_id)`.
 
-**Gold** — Pendiente: agregaciones por día, mes, día de semana y relación clima-viajes.
+**Gold** — Agregaciones por mes, año, métricas de alquileres y de clima.
 
 ## Dashboard
 
-El dashboard está construido en **Looker Studio** conectado a la tabla Gold de BigQuery.
-Muestra el comportamiento de la demanda de bicicletas según clima, temporada y día de la semana.
+El dashboard está construido en **Looker Studio** conectado a la tablas Silver y Gold de BigQuery.
+Muestra el comportamiento de la demanda de bicicletas según temporada, día de la semana, horarios y clima.
 
 **Responsable:** Jennifer Suarez
 
 ### Visualizaciones
 
-1. Serie temporal de viajes por fecha
-2. Viajes por día de la semana (gráfico de barras)
-3. Relación temperatura / condición climática vs. alquileres
+1. Demanda promedio por temporada.
+2. Demanda promedio por hora del día.
+3. Demanda promedio por día de la semana.
+4. Relación entre temperatura y alquileres.
+5. Relación entre humedad y alquileres.
+6. Demanda por condición climática y temporada.
+7. Evolución mensual de alquileres (métrica Gold).
+
+### Hallazgos principales
+
+    El análisis realizado en Looker Studio permitió identificar los siguientes patrones de comportamiento en la demanda de bicicletas:
+
+    - Las horas de mayor utilización corresponden a los periodos de desplazamiento laboral, observándose picos de demanda en la mañana (8:00) y al finalizar la jornada (17:00).
+    - Los días laborables presentan una demanda ligeramente superior a los fines de semana, siendo jueves el día con mayor pico de demanda.
+    - La temperatura muestra una relación positiva con la cantidad de alquileres: a medida que aumenta la temperatura promedio, también aumenta el uso del servicio.
+    - Los niveles elevados de humedad se asocian con una disminución en la demanda de bicicletas.
+    - La demanda presenta un comportamiento estacional claramente definido.
+
+#### Validación del comportamiento estacional
+
+    Para validar el comportamiento estacional, se analizó la **evolución mensual** de los alquileres de bicicletas. Los resultados muestran que la demanda comienza a incrementarse progresivamente durante la primavera, continúa creciendo durante el verano y alcanza su punto máximo en agosto, que representa el mes con mayor cantidad de alquileres. Posteriormente, durante el otoño, se observa una disminución gradual de la demanda, mientras que los niveles más bajos se registran en invierno.
+
+    El comportamiento observado permite concluir que la estacionalidad del negocio sigue el patrón esperado para un sistema de bicicletas compartidas en el hemisferio norte:
+
+    Verano > Primavera > Otoño > Invierno
+
+    Este hallazgo fue considerado durante la interpretación de los resultados del dashboard para evitar conclusiones erróneas derivadas únicamente de la codificación original del dataset.
 
 ### Acceso
 
-> **Link al dashboard:** _[pendiente — Jennifer inserta aquí el link de Looker Studio]_
+> ****Dashboard en Looker Studio:** https://datastudio.google.com/reporting/6a20df28-3eea-4c98-9483-a36b6c309872  
 
 ### Capturas de pantalla
 
-<!-- Aquí van las capturas de pantalla del dashboard -->
+    ![Dashboard Bicimad](images/dashboard_final.png)
 
-> **Captura de pantalla del dashboard — insertar aquí**
-
----
+    ![Dashboard Bicimad](images/dashboard_filtros.png)
 
 ## Estado del proyecto
 
@@ -196,9 +218,9 @@ Muestra el comportamiento de la demanda de bicicletas según clima, temporada y 
 - [x] SQL Bronze (external tables en BigQuery)
 - [x] SQL Silver (limpieza y deduplicación)
 - [x] GitHub Actions (`etl.yml`) ejecutando el pipeline
-- [ ] SQL Gold (agregaciones y métricas)
-- [ ] Dashboard Looker Studio (3+ visualizaciones)
-- [ ] Documentación final del README
+- [x] SQL Gold (agregaciones y métricas)
+- [x] Dashboard Looker Studio (3+ visualizaciones)
+- [x] Documentación final del README
 
 ## Equipo
 
