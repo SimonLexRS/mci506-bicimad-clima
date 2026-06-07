@@ -35,3 +35,10 @@ Thumbs.db
 # Logs
 *.log
 PLAN.md
+
+# Playwright screenshots (generados por Claude Code)
+.playwright-mcp/
+[0-9]-*.png
+[0-9][0-9]-*.png
+commit-*.png
+commits-*.png

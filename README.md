@@ -180,33 +180,33 @@ Muestra el comportamiento de la demanda de bicicletas según temporada, día de 
 
 ### Hallazgos principales
 
-    El análisis realizado en Looker Studio permitió identificar los siguientes patrones de comportamiento en la demanda de bicicletas:
+El análisis realizado en Looker Studio permitió identificar los siguientes patrones de comportamiento en la demanda de bicicletas:
 
-    - Las horas de mayor utilización corresponden a los periodos de desplazamiento laboral, observándose picos de demanda en la mañana (8:00) y al finalizar la jornada (17:00).
-    - Los días laborables presentan una demanda ligeramente superior a los fines de semana, siendo jueves el día con mayor pico de demanda.
-    - La temperatura muestra una relación positiva con la cantidad de alquileres: a medida que aumenta la temperatura promedio, también aumenta el uso del servicio.
-    - Los niveles elevados de humedad se asocian con una disminución en la demanda de bicicletas.
-    - La demanda presenta un comportamiento estacional claramente definido.
+- Las horas de mayor utilización corresponden a los periodos de desplazamiento laboral, observándose picos de demanda en la mañana (8:00) y al finalizar la jornada (17:00).
+- Los días laborables presentan una demanda ligeramente superior a los fines de semana, siendo jueves el día con mayor pico de demanda.
+- La temperatura muestra una relación positiva con la cantidad de alquileres: a medida que aumenta la temperatura promedio, también aumenta el uso del servicio.
+- Los niveles elevados de humedad se asocian con una disminución en la demanda de bicicletas.
+- La demanda presenta un comportamiento estacional claramente definido.
 
 #### Validación del comportamiento estacional
 
-    Para validar el comportamiento estacional, se analizó la **evolución mensual** de los alquileres de bicicletas. Los resultados muestran que la demanda comienza a incrementarse progresivamente durante la primavera, continúa creciendo durante el verano y alcanza su punto máximo en agosto, que representa el mes con mayor cantidad de alquileres. Posteriormente, durante el otoño, se observa una disminución gradual de la demanda, mientras que los niveles más bajos se registran en invierno.
+Para validar el comportamiento estacional, se analizó la **evolución mensual** de los alquileres de bicicletas. Los resultados muestran que la demanda comienza a incrementarse progresivamente durante la primavera, continúa creciendo durante el verano y alcanza su punto máximo en agosto, que representa el mes con mayor cantidad de alquileres. Posteriormente, durante el otoño, se observa una disminución gradual de la demanda, mientras que los niveles más bajos se registran en invierno.
 
-    El comportamiento observado permite concluir que la estacionalidad del negocio sigue el patrón esperado para un sistema de bicicletas compartidas en el hemisferio norte:
+El comportamiento observado permite concluir que la estacionalidad del negocio sigue el patrón esperado para un sistema de bicicletas compartidas en el hemisferio norte:
 
-    Verano > Primavera > Otoño > Invierno
+**Verano > Primavera > Otoño > Invierno**
 
-    Este hallazgo fue considerado durante la interpretación de los resultados del dashboard para evitar conclusiones erróneas derivadas únicamente de la codificación original del dataset.
+Este hallazgo fue considerado durante la interpretación de los resultados del dashboard para evitar conclusiones erróneas derivadas únicamente de la codificación original del dataset.
 
 ### Acceso
 
-> ****Dashboard en Looker Studio:** https://datastudio.google.com/reporting/6a20df28-3eea-4c98-9483-a36b6c309872  
+> **Dashboard en Looker Studio:** https://datastudio.google.com/reporting/6a20df28-3eea-4c98-9483-a36b6c309872
 
 ### Capturas de pantalla
 
-    ![Dashboard Bicimad](images/dashboard_final.png)
+![Dashboard principal](images/dashboard_final.png)
 
-    ![Dashboard Bicimad](images/dashboard_filtros.png)
+![Dashboard con filtros](images/dashboard_filtros.png)
 
 ## Estado del proyecto
 
