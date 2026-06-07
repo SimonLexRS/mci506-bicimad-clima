@@ -1,3 +1,5 @@
+-- Silver layer: transforma y limpia los datos del Bronze para análisis.
+-- Convierte tipos, renombra columnas y elimina duplicados.
 CREATE OR REPLACE TABLE
 `mci506-bicimad-clima-v2.bike_sharing_dw.silver_day`
 AS
@@ -66,7 +68,7 @@ WHERE rn = 1
 
 SELECT * EXCEPT(rn)
 FROM dedup;
---Creamos la capa Silver para el dataset day
+-- Silver table para el dataset day
 
 CREATE OR REPLACE TABLE
 `mci506-bicimad-clima-v2.bike_sharing_dw.silver_hour`
@@ -139,4 +141,4 @@ WHERE rn = 1
 SELECT * EXCEPT(rn)
 FROM dedup;
 
---Crea el dataset de la capa Silver para day
+-- Silver table para el dataset hour
