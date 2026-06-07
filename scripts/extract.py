@@ -1,34 +1,28 @@
 """Extracción del Bike Sharing Dataset (UCI).
 
-Descarga el ZIP público, valida su contenido, lo guarda localmente y,
-si GCS_BUCKET_NAME está configurado, lo sube a GCS.
+Descarga el dataset desde UCI ML Repository usando ucimlrepo,
+lo procesa, lo guarda localmente y, si GCS_BUCKET_NAME está configurado,
+lo sube a GCS.
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
-import io
 import logging
 import sys
-import zipfile
 from pathlib import Path
 
 import pandas as pd
-import requests
 from dotenv import load_dotenv
 import os
+from ucimlrepo import fetch_ucirepo
 
-DATASET_URL = (
-    "https://archive.ics.uci.edu/static/public/275/bike+sharing+dataset.zip"
-)
+DATASET_ID = 275
 CSV_FILES = ["day.csv", "hour.csv"]
 MIN_FILAS = 100
 MIN_COLUMNAS = 5
 OUTPUT_DIR = Path("data/raw")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "")
-REQUEST_TIMEOUT_S = 60
-USER_AGENT = "Mozilla/5.0 (compatible; mci506-extract/1.0)"
 
 log = logging.getLogger(__name__)
 
@@ -37,58 +31,57 @@ class ExtractError(RuntimeError):
     """Error recuperable durante la extracción."""
 
 
-# 1. DESCARGA
+# 1. OBTENCIÓN Y PROCESAMIENTO DESDE UCI
 
 
-def descargar_zip(url: str) -> bytes:
-    log.info("Descargando dataset desde UCI...")
-    log.info(f"  URL: {url}")
-    headers = {"User-Agent": USER_AGENT}
+def obtener_dataframes_uci() -> dict[str, pd.DataFrame]:
+    log.info(f"Obteniendo dataset desde UCI ML Repository (ID {DATASET_ID})...")
     try:
-        respuesta = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT_S)
-        respuesta.raise_for_status()
-    except requests.exceptions.HTTPError as e:
-        raise ExtractError(f"Error HTTP al descargar: {e}") from e
-    except requests.exceptions.ConnectionError as e:
-        raise ExtractError("Sin conexión a internet o URL inaccesible.") from e
-    except requests.exceptions.Timeout as e:
-        raise ExtractError("Tiempo de espera agotado. Intenta de nuevo.") from e
+        bike_sharing = fetch_ucirepo(id=DATASET_ID)
+    except Exception as e:
+        raise ExtractError(f"Error al obtener dataset vía ucimlrepo: {e}") from e
 
-    size_kb = len(respuesta.content) / 1024
-    log.info(f"Descarga completada — {size_kb:.1f} KB")
-    return respuesta.content
+    df_hour = bike_sharing.data.original
+    if df_hour is None or df_hour.empty:
+        raise ExtractError("El dataset obtenido de ucimlrepo está vacío o no contiene la estructura original esperada.")
 
+    log.info(f"  ✓ Datos horarios (hour.csv) obtenidos: {df_hour.shape[0]} filas × {df_hour.shape[1]} columnas")
 
-def verificar_zip(contenido: bytes) -> None:
-    md5 = hashlib.md5(contenido).hexdigest()
-    log.info(f"  ✓ MD5 del ZIP: {md5} (traza de auditoría)")
-
-
-# 2. EXTRACCIÓN DEL ZIP
-
-
-def extraer_dataframes(contenido_zip: bytes) -> dict[str, pd.DataFrame]:
-    log.info("Extrayendo archivos del ZIP...")
-    dataframes: dict[str, pd.DataFrame] = {}
+    log.info("Reconstruyendo datos diarios (day.csv) a partir de los datos horarios...")
     try:
-        with zipfile.ZipFile(io.BytesIO(contenido_zip)) as z:
-            disponibles = z.namelist()
-            log.info(f"  Archivos en ZIP: {disponibles}")
-            for nombre in CSV_FILES:
-                if nombre not in disponibles:
-                    log.warning(f"  ⚠ '{nombre}' no encontrado en el ZIP, se omite.")
-                    continue
-                with z.open(nombre) as f:
-                    df = pd.read_csv(f)
-                    dataframes[nombre] = df
-                    log.info(
-                        f"  ✓ {nombre}: {df.shape[0]} filas × "
-                        f"{df.shape[1]} columnas"
-                    )
-    except zipfile.BadZipFile as e:
-        raise ExtractError("El contenido descargado no es un ZIP válido.") from e
+        grouped = df_hour.groupby('dteday')
+        
+        def round_half_up(series):
+            return int(series.mean() + 0.5)
 
-    return dataframes
+        agg_dict = {
+            'season': 'first',
+            'yr': 'first',
+            'mnth': 'first',
+            'holiday': 'first',
+            'weekday': 'first',
+            'workingday': 'first',
+            'weathersit': round_half_up,
+            'temp': lambda x: round(x.mean(), 6),
+            'atemp': lambda x: round(x.mean(), 6),
+            'hum': lambda x: round(x.mean(), 6),
+            'windspeed': lambda x: round(x.mean(), 6),
+            'casual': 'sum',
+            'registered': 'sum',
+            'cnt': 'sum'
+        }
+        
+        df_day = grouped.agg(agg_dict).reset_index()
+        df_day.insert(0, 'instant', range(1, len(df_day) + 1))
+        
+        log.info(f"  ✓ Datos diarios (day.csv) reconstruidos: {df_day.shape[0]} filas × {df_day.shape[1]} columnas")
+    except Exception as e:
+        raise ExtractError(f"Error al reconstruir el dataset diario: {e}") from e
+
+    return {
+        "day.csv": df_day,
+        "hour.csv": df_hour
+    }
 
 
 # 3. VALIDACIÓN
@@ -211,13 +204,7 @@ def main() -> int:
     log.info("=" * 55)
 
     try:
-        contenido = descargar_zip(DATASET_URL)
-        verificar_zip(contenido)
-        dataframes = extraer_dataframes(contenido)
-        if not dataframes:
-            raise ExtractError(
-                "No se pudo extraer ningún CSV del ZIP descargado."
-            )
+        dataframes = obtener_dataframes_uci()
 
         rutas_local: list[Path] = []
         for nombre, df in dataframes.items():
