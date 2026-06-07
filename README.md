@@ -153,7 +153,7 @@ El data warehouse usa tres capas en el dataset `bike_sharing_dw` del proyecto `m
 | --- | --- | --- | --- |
 | Bronze | `bronze_day`, `bronze_hour` | `sql/bronze.sql` | ✅ |
 | Silver | `silver_day`, `silver_hour` | `sql/silver_transform.sql` | ✅ |
-| Gold | | `sql/gold_aggregations.sql` | ⏳ |
+| Gold | | `sql/gold_aggregations.sql` | ✅ |
 
 **Bronze** — External tables apuntando directamente a los archivos en GCS (`gs://bike_sharing_v2/raw/`).
 
