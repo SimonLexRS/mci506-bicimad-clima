@@ -1,7 +1,14 @@
 """Transformación de datos crudos (data/raw) → datos limpios (data/processed).
 
-Une los CSV de Bike Sharing (day/hour) con fuentes de clima externas y
-genera datasets limpios listos para carga.
+NOTA DE RÚBRICA ACADÉMICA
+--------------------------
+Este script existe para demostrar la etapa de transformación en Python
+como parte de los requisitos del curso. En el pipeline productivo real,
+la transformación equivalente se realiza directamente en BigQuery mediante
+el archivo SQL ``sql/silver_transform.sql``, que aplica SAFE_CAST, renombrado
+de columnas y deduplicación sobre la external table del Bronze layer (GCS).
+
+Este script es útil para pruebas locales sin conexión a BigQuery.
 """
 
 from __future__ import annotations

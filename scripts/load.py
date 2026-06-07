@@ -1,7 +1,20 @@
 """Carga de datos procesados a BigQuery (capas Silver/Gold).
 
-Lee los archivos de data/processed/ y los inserta en las tablas destino
-de BigQuery del proyecto.
+NOTA DE RÚBRICA ACADÉMICA
+--------------------------
+Este script existe para demostrar la etapa de carga (Load) en Python
+como parte de los requisitos del curso. En el pipeline productivo real,
+las capas Silver y Gold se crean y actualizan directamente en BigQuery
+mediante los archivos SQL de la carpeta ``sql/``:
+
+- ``sql/silver_transform.sql`` — crea silver_day y silver_hour con
+  limpieza de tipos y deduplicación, leyendo desde la external table
+  del Bronze layer que apunta a los CSV en GCS.
+- ``sql/gold_aggregations.sql`` — crea las tablas Gold con métricas
+  agregadas a partir de las tablas Silver.
+
+Este script es útil para pruebas locales de carga directa sin pasar
+por el flujo GCS → BigQuery External Table.
 """
 
 from __future__ import annotations

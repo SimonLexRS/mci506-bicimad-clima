@@ -114,6 +114,11 @@ python scripts/transform.py
 
 Salida esperada: `data/processed/day.csv` y `data/processed/hour.csv`
 
+> **Nota:** Este script cumple el requisito académico de la etapa Transform en Python.
+> En el pipeline productivo, la transformación equivalente se ejecuta directamente
+> en BigQuery con `sql/silver_transform.sql` (SAFE_CAST, renombrado, deduplicación
+> sobre la external table del Bronze layer que apunta a los CSV en GCS).
+
 ### Carga a BigQuery
 
 ```bash
@@ -121,6 +126,11 @@ python scripts/load.py --capa silver
 python scripts/load.py --capa gold
 python scripts/load.py --capa ambas
 ```
+
+> **Nota:** Este script cumple el requisito académico de la etapa Load en Python.
+> En el pipeline productivo, las capas Silver y Gold se crean y actualizan
+> directamente en BigQuery con los archivos de `sql/` — no se requiere carga
+> desde Python porque BigQuery lee los CSV directamente desde GCS vía external tables.
 
 ## Automatización
 
